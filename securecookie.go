@@ -391,8 +391,9 @@ func verifyMac(h hash.Hash, value []byte, mac []byte) error {
 
 // encrypt encrypts a value using the given block in counter mode.
 //
-// A random initialization vector (http://goo.gl/zF67k) with the length of the
+// A random initialization vector with the length of the
 // block size is prepended to the resulting ciphertext.
+// cf: https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Initialization_vector_(IV)
 func encrypt(block cipher.Block, value []byte) ([]byte, error) {
 	iv := GenerateRandomKey(block.BlockSize())
 	if iv == nil {
@@ -408,7 +409,8 @@ func encrypt(block cipher.Block, value []byte) ([]byte, error) {
 // decrypt decrypts a value using the given block in counter mode.
 //
 // The value to be decrypted must be prepended by a initialization vector
-// (http://goo.gl/zF67k) with the length of the block size.
+// with the length of the block size.
+// cf: https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Initialization_vector_(IV)
 func decrypt(block cipher.Block, value []byte) ([]byte, error) {
 	size := block.BlockSize()
 	if len(value) > size {
@@ -529,22 +531,21 @@ func GenerateRandomKey(length int) []byte {
 //
 // Example:
 //
-//      codecs := securecookie.CodecsFromPairs(
-//           []byte("new-hash-key"),
-//           []byte("new-block-key"),
-//           []byte("old-hash-key"),
-//           []byte("old-block-key"),
-//       )
+//	codecs := securecookie.CodecsFromPairs(
+//	     []byte("new-hash-key"),
+//	     []byte("new-block-key"),
+//	     []byte("old-hash-key"),
+//	     []byte("old-block-key"),
+//	 )
 //
-//      // Modify each instance.
-//      for _, s := range codecs {
-//             if cookie, ok := s.(*securecookie.SecureCookie); ok {
-//                 cookie.MaxAge(86400 * 7)
-//                 cookie.SetSerializer(securecookie.JSONEncoder{})
-//                 cookie.HashFunc(sha512.New512_256)
-//             }
-//         }
-//
+//	// Modify each instance.
+//	for _, s := range codecs {
+//	       if cookie, ok := s.(*securecookie.SecureCookie); ok {
+//	           cookie.MaxAge(86400 * 7)
+//	           cookie.SetSerializer(securecookie.JSONEncoder{})
+//	           cookie.HashFunc(sha512.New512_256)
+//	       }
+//	   }
 func CodecsFromPairs(keyPairs ...[]byte) []Codec {
 	codecs := make([]Codec, len(keyPairs)/2+len(keyPairs)%2)
 	for i := 0; i < len(keyPairs); i += 2 {
